@@ -1,0 +1,136 @@
+<body>
+  <h3>CSV Schema Auto Detection</h3>
+<h4>Problem</h4>
+<p>We want to create a program that takes a CSV file and infers its schema. We need to assign the best possible type to each column.</p>
+<h4>Input</h4>
+<h5>Separator</h5>
+<p>The separator is the character <code>|</code> and it <strong>WON'T</strong> be present in the document<br>
+for any other purpose.</p>
+<h5>Headers</h5>
+<p>The first line of the CSV contains the names of the columns separated by the <code>|</code><br>
+character.</p>
+<h5>Nullable</h5>
+<p>If there there are no characters between two separators it means that the<br>
+corresponding column is <strong>nullable</strong>.</p>
+<h5>Supported Data Types</h5>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Format</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BOOLEAN</td>
+<td><code>TRUE</code> or <code>True</code> or <code>true</code> or <code>FALSE</code> or <code>False</code> or <code>false</code></td>
+<td><code>TRUE</code>, <code>false</code></td>
+</tr>
+<tr>
+<td>INTEGER</td>
+<td>Optional sign <code>+</code>, <code>-</code> with at least one digit character</td>
+<td><code>-123</code>, <code>42</code></td>
+</tr>
+<tr>
+<td>FLOAT</td>
+<td>Optional sign <code>+</code>, <code>-</code> with at least one digit character and a <code>.</code> character</td>
+<td><code>0.12</code>, <code>-.15</code></td>
+</tr>
+<tr>
+<td>TIME</td>
+<td>1 to 2 digits for the hour, 1 to 2 digits for the minutes and optionally up to 2 digits for the seconds separated by <code>:</code>. Has to be a valid time</td>
+<td><code>7:25:17</code>, <code>19:30</code></td>
+</tr>
+<tr>
+<td>DATE</td>
+<td>Up to 4 digits for the year, Up to 2 digits for the month and up to 2 digit for the day separated by <code>-</code>. Has to be a valid date [1]</td>
+<td><code>2017-5-15</code>, <code>87-11-25</code></td>
+</tr>
+<tr>
+<td>TIMESTAMP</td>
+<td><code>DATE</code> + <code>T</code> + <code>TIME</code></td>
+<td><code>2017-10-15T7:25:17</code></td>
+</tr>
+<tr>
+<td>STRING</td>
+<td>Any set of characters except <code>\|</code></td>
+<td><code>Three</code>, <code>F@#%!</code></td>
+</tr>
+</tbody>
+</table>
+<p>[1] : <strong>NOTE</strong> - Do not consider leap years.</p>
+<h5>Type conversion</h5>
+<p>Some data types are compatible and can be automatically converted.</p>
+<ol>
+<li><code>INTEGER</code> can be converted to <code>FLOAT</code>.</li>
+<li><code>DATE</code> can be converted to <code>TIMESTAMP</code>.</li>
+<li><strong>Everything</strong> can be converted to <code>STRING</code>.</li>
+</ol>
+<p><strong>NOTE</strong>: If a column is empty the default data type should be assigned to it.</p>
+<h4>Output</h4>
+<p>The detected schema has to be written in valid <code>JSON</code>. It should contain an<br>
+array of objects. Each one should contain the schema of a column.</p>
+<p>The fields for each column are <code>name</code> for the name, <code>type</code> for the type;<br>
+and <code>nullable</code> with a <code>true</code> or <code>false</code> value depending if the column id<br>
+nullable or not.</p>
+<pre><code class="language-json">[
+  {
+    <span class="hljs-attr">"name"</span>: <span class="hljs-string">"col1"</span>,
+    <span class="hljs-attr">"type"</span>: <span class="hljs-string">"STRING"</span>,
+    <span class="hljs-attr">"nullable"</span>: <span class="hljs-literal">false</span>
+  },
+  {
+    <span class="hljs-attr">"name"</span>: <span class="hljs-string">"col2"</span>,
+    <span class="hljs-attr">"type"</span>: <span class="hljs-string">"FLOAT"</span>,
+    <span class="hljs-attr">"nullable"</span>: <span class="hljs-literal">true</span>
+  }
+  ...
+]
+</code></pre>
+<h4>Example</h4>
+<h5>Input</h5>
+<pre><code class="language-txt">name|description|years in the office|salary|bdate|last_seen
+Jane Smith|The Boss|5|20000|1973-7-12|2018-05-30
+Joth Maclane||3|123.50|1995-12-07|2018-6-5T12:24
+Janice|In Accounting||8512.85||2018-06-08T12:23
+</code></pre>
+<h5>Output</h5>
+<pre><code class="language-json">[
+    {
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"name"</span>,
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"STRING"</span>,
+        <span class="hljs-attr">"nullable"</span>: <span class="hljs-literal">false</span>
+    },
+    {
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"description"</span>,
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"STRING"</span>,
+        <span class="hljs-attr">"nullable"</span>: <span class="hljs-literal">true</span>
+    },
+    {
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"years in the office"</span>,
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"INTEGER"</span>,
+        <span class="hljs-attr">"nullable"</span>: <span class="hljs-literal">true</span>
+    },
+    {
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"salary"</span>,
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"FLOAT"</span>,
+        <span class="hljs-attr">"nullable"</span>: <span class="hljs-literal">false</span>
+    },
+    {
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"bdate"</span>,
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"DATE"</span>,
+        <span class="hljs-attr">"nullable"</span>: <span class="hljs-literal">true</span>
+    },
+    {
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"last_seen"</span>,
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"TIMESTAMP"</span>,
+        <span class="hljs-attr">"nullable"</span>: <span class="hljs-literal">false</span>
+    }
+]
+</code></pre>
+<ul>
+<li><strong>[execution time limit] 4 seconds (js)</strong></li>
+</ul>
+
+</body>
